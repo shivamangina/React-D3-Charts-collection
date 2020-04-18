@@ -1,28 +1,25 @@
-import React, { Component } from 'react'
-import * as d3 from 'd3'
+import React, { Component } from "react";
+import * as d3 from "d3";
 class BarChart extends Component {
-    state = {
-        temperatureData : [ 8, 5, 13, 9, 12 ]
-    }
-    
-    componentDidMount(){
-       this.createChart()
-    }
+  state = {
+    temperatureData: [8, 5, 13, 9, 12],
+  };
 
-    createChart =  () => {
-        d3.select(this.refs.temperatures)
-        .selectAll("h2")
-        .data(this.state.temperatureData)
-        .enter()
-            .append("h2")
-            .text("New Temperature")
-    }
-    
-   
-   
- 
-    render(){
-        return <div ref="temperatures"></div>
-    }
+  componentDidMount() {
+    this.createChart();
+  }
+
+  createChart = () => {
+    d3.select(this.refs.temperatures)
+      .selectAll("h2")
+      .data(this.state.temperatureData)
+      .enter()
+      .append("h2")
+      .text((d) => d);
+  };
+
+  render() {
+    return <div ref="temperatures"></div>;
+  }
 }
-export default BarChart
+export default BarChart;
