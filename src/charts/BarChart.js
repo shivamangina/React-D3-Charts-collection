@@ -31,12 +31,7 @@ class BarChart extends Component {
 
     let g = svg
       .append('g') // append a group - This is chart
-      .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')'); // TODO  - come back here
-
-    let y = d3
-      .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.revenue)])
-      .range([height, 0]);
+      .attr('transform', `translate( ${margin.left} ,  ${margin.top})`); // TODO  - come back here
 
     let x = d3
       .scaleBand()
@@ -45,14 +40,20 @@ class BarChart extends Component {
       .paddingInner(0.3)
       .paddingOuter(1);
 
-    // let colors = d3.schemeCategory10;
+    let y = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.revenue)])
+      .range([height, 0]);
 
-    console.log(x, y);
+    let colors = d3
+      .scaleOrdinal()
+      .domain(data.map((d) => d.month))
+      .range(d3.schemeCategory10);
 
     let xAxis = d3.axisBottom(x);
     g.append('g')
       .attr('class', 'x axis')
-      .attr('transform', 'translate(0, ' + height + ')')
+      .attr('transform', `translate(0, ${height})`)
       .call(xAxis)
       .selectAll('text')
       .attr('y', '10')
@@ -72,7 +73,7 @@ class BarChart extends Component {
       .attr('y', (d) => y(d.revenue))
       .attr('width', x.bandwidth())
       .attr('height', (d) => height - y(d.revenue))
-      // .attr('fill', (d) => colors(d.month));
+      .attr('fill', (d) => colors(d.month));
   };
 
   render() {
