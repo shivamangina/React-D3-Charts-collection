@@ -1,5 +1,6 @@
 import React, { Component, createRef } from 'react';
 import * as d3 from 'd3';
+
 class BarChart extends Component {
   constructor(props) {
     super(props);
@@ -11,6 +12,31 @@ class BarChart extends Component {
     data: []
   };
 
+  componentDidMount() {
+    // load data
+    d3.json('data/revenues.json')
+      .then((data) => {
+        this.setState({ data }, () => {
+          this.initChart(this.state.data);
+
+          setInterval(() => {
+            this.setState({ flag: !this.state.flag });
+            this.updateChart(
+              this.state.flag ? this.state.data : this.state.data.slice(1)
+            );
+          }, 1000);
+
+          this.updateChart(this.state.data);
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  /**
+   * initializes the chart values
+   */
   initChart = (data) => {
     this.margin = {
       left: 100,
@@ -68,74 +94,80 @@ class BarChart extends Component {
       .attr('text-anchor', 'middle');
   };
 
-  componentDidMount() {
-    // load data
-    d3.json('data/revenues.json')
-      .then((data) => {
-        this.setState({ data }, () => {
-          this.initChart(this.state.data);
-          setInterval(() => {
-            this.setState({
-              flag: !this.state.flag
-            });
-            this.updateChart(this.state.data);
-          }, 1000);
-          this.updateChart(this.state.data);
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
+  /**
+   * updates chart with new data
+   */
   updateChart = (data) => {
+    // toogle between revenue and profit
     let value = this.state.flag ? 'revenue' : 'profit';
     this.x.domain(data.map((d) => d.month));
-    this.y.domain([0, d3.max(data, (d) => d[value])]);
+    this.y.domain([0, d3.max(data, (d) => parseInt(d[value]))]);
 
+    // prepare color schema
     let colors = d3
       .scaleOrdinal()
       .domain(data.map((d) => d.month))
       .range(d3.schemeCategory10);
 
+    // init x axis
     let xAxis = d3.axisBottom(this.x);
+
+    // init y axis
     let yAxis = d3
       .axisLeft(this.y)
       .tickFormat((revenue) => revenue / 1000 + 'K');
 
+    // call x group
     this.xAxisGroup
+      .transition(d3.transition().duration(750))
       .call(xAxis)
       .selectAll('text')
       .attr('y', '10')
       .attr('x', '-5')
       .attr('text-anchor', 'end')
       .attr('transform', 'rotate(-40)');
+    // call y group
+    this.yAxisGroup.transition(d3.transition().duration(750)).call(yAxis);
 
-    this.yAxisGroup.call(yAxis);
+    // set text to labels
     this.xLabel.text('Months');
     this.yLabel.text(value);
+
     // set data
-    let rects = this.g.selectAll('rect').data(data);
+    let rects = this.g.selectAll('rect').data(data, (d) => {
+      return d.month;
+    });
 
     // remove old data
-    rects.exit().remove();
-
-    //update
     rects
-      .attr('x', (d) => this.x(d.month))
-      .attr('y', (d) => this.y(d[value]))
-      .attr('width', this.x.bandwidth())
-      .attr('height', (d) => this.height - this.y(d[value]));
+      .exit()
+      .attr('fill', 'black')
+      .transition(d3.transition().duration(750))
+      .attr('y', this.y(0))
+      .attr('height', 0)
+      .remove();
+
+    //update (merge is used insted of this)
+    // rects
+    //   .transition(d3.transition().duration(750))
+    //   .attr('x', (d) => this.x(d.month))
+    //   .attr('y', (d) => this.y(d[value]))
+    //   .attr('width', this.x.bandwidth())
+    //   .attr('height', (d) => this.height - this.y(d[value]));
 
     // enter
     rects
       .enter()
       .append('rect')
+      .attr('y', this.y(0))
+      .attr('height', 0)
+      .merge(rects)
+      .transition(d3.transition().duration(750))
+      .attr('fill', (d) => colors(d.month))
       .attr('x', (d) => this.x(d.month))
-      .attr('y', (d) => this.y(d.revenue))
+      .attr('y', (d) => this.y(d[value]))
       .attr('width', this.x.bandwidth())
-      .attr('height', (d) => this.height - this.y(d.revenue))
-      .attr('fill', (d) => colors(d.month));
+      .attr('height', (d) => this.height - this.y(d[value]));
   };
 
   render() {
