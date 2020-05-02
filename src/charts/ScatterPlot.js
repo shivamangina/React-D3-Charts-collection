@@ -1,5 +1,6 @@
 import React, { Component, createRef } from 'react';
 import * as d3 from 'd3';
+import d3tip from 'd3-tip';
 
 export default class ScatterPlot extends Component {
   constructor(props) {
@@ -8,6 +9,7 @@ export default class ScatterPlot extends Component {
   }
 
   state = {
+    valueNow:50,
     time: 0,
     data: []
   };
@@ -31,7 +33,7 @@ export default class ScatterPlot extends Component {
 
         this.setState({ data: formattedData }, () => {
           this.initChart();
-          setInterval(() => {
+           this.int = setInterval(() => {
             this.setState({
               time: this.state.time < 214 ? this.state.time + 1 : 0
             });
@@ -45,6 +47,29 @@ export default class ScatterPlot extends Component {
         console.log(error);
       });
   }
+
+  play = () => {
+    this.int = setInterval(() => {
+      this.setState({
+        time: this.state.time < 214 ? this.state.time + 1 : 0
+      });
+      this.updateChart(this.state.data[this.state.time]);
+    }, 100);
+    
+  }
+  
+  pause = () => {
+clearInterval(this.int)
+  }
+
+  reset = () => {
+    this.setState({
+      time:  0
+    });
+      }
+  
+
+
 
   /**
    * initializes the chart values
@@ -71,6 +96,21 @@ export default class ScatterPlot extends Component {
         `translate( ${this.margin.left} ,  ${this.margin.top})`
       );
 
+    console.log(d3tip);
+
+    this.tip = d3tip()
+      .attr('class', 'd3-tip')
+      .offset([-10, 0])
+      .html(function (d) {
+        return `<strong>Country:</strong> <span style='color:red'>${d.country}</span><br>
+        <strong>Continent:</strong> <span style='color:red'>${d.continent}</span><br>
+        <strong>Life_exp:</strong> <span style='color:red'>${d.life_exp}</span><br>
+        <strong>Income:</strong> <span style='color:red'>${d.income}</span><br>
+        <strong>Population:</strong> <span style='color:red'>${d.population}</span><br>`;
+      });
+
+    this.g.call(this.tip);
+
     // Scales
     this.x = d3
       .scaleLog()
@@ -92,6 +132,34 @@ export default class ScatterPlot extends Component {
       .attr('transform', `translate(0, ${this.height})`);
 
     this.yAxisGroup = this.g.append('g').attr('class', 'y axis');
+
+    let continents = ['europe', 'asia', 'america', 'africa'];
+
+    //Legend
+    this.legend = this.g
+      .append('g')
+      .attr(
+        'transform',
+        'translate(' + this.width - 10 + ', ' + this.height - 125 + ')'
+      );
+
+    continents.forEach((continent, i) => {
+      this.legendRow = this.legend
+        .append('g')
+        .attr('transform', 'translate(' + 480 + ',' + i * 20 + ')');
+      this.legendRow
+        .append('rect')
+        .attr('width', 10)
+        .attr('height', 10)
+        .attr('fill', this.continentColor(continent));
+      this.legendRow
+        .append('text')
+        .attr('x', -10)
+        .attr('y', 10)
+        .attr('text-anchor', 'end')
+        .style('text-transform', 'captalize')
+        .text(continent);
+    });
 
     // Labels
     this.xLabel = this.g
@@ -145,7 +213,7 @@ export default class ScatterPlot extends Component {
     let t = d3.transition().duration(100);
 
     // JOIN new data with old elements.
-    let circles = this.g.selectAll('circle').data(data,(d) => d.country);
+    let circles = this.g.selectAll('circle').data(data, (d) => d.country);
 
     // EXIT old elements not present in new data.
     circles.exit().attr('class', 'exit').remove();
@@ -156,6 +224,8 @@ export default class ScatterPlot extends Component {
       .append('circle')
       .attr('class', 'enter')
       .attr('fill', (d) => this.continentColor(d.continent))
+      .on('mouseover', this.tip.show)
+      .on('mouseout', this.tip.hide)
       .merge(circles)
       .transition(t)
       .attr('cy', (d) => this.y(d.life_exp))
@@ -167,6 +237,13 @@ export default class ScatterPlot extends Component {
   };
 
   render() {
-    return <div ref={this.myChart}> </div>;
+    return <div>
+      <button onClick={this.play}>Play</button>
+      <button onClick={this.pause}>Pause</button>
+      <button onClick={this.reset}>Reset</button>
+
+     
+<div ref={this.myChart}> </div>
+    </div> 
   }
 }
