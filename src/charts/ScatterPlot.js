@@ -9,7 +9,7 @@ export default class ScatterPlot extends Component {
   }
 
   state = {
-    valueNow:50,
+    valueNow: 50,
     time: 0,
     data: []
   };
@@ -33,7 +33,7 @@ export default class ScatterPlot extends Component {
 
         this.setState({ data: formattedData }, () => {
           this.initChart();
-           this.int = setInterval(() => {
+          this.int = setInterval(() => {
             this.setState({
               time: this.state.time < 214 ? this.state.time + 1 : 0
             });
@@ -55,21 +55,17 @@ export default class ScatterPlot extends Component {
       });
       this.updateChart(this.state.data[this.state.time]);
     }, 100);
-    
-  }
-  
+  };
+
   pause = () => {
-clearInterval(this.int)
-  }
+    clearInterval(this.int);
+  };
 
   reset = () => {
     this.setState({
-      time:  0
+      time: 0
     });
-      }
-  
-
-
+  };
 
   /**
    * initializes the chart values
@@ -237,13 +233,14 @@ clearInterval(this.int)
   };
 
   render() {
-    return <div>
-      <button onClick={this.play}>Play</button>
-      <button onClick={this.pause}>Pause</button>
-      <button onClick={this.reset}>Reset</button>
+    return (
+      <div>
+        <button onClick={this.play}>Play</button>
+        <button onClick={this.pause}>Pause</button>
+        <button onClick={this.reset}>Reset</button>
 
-     
-<div ref={this.myChart}> </div>
-    </div> 
+        <div ref={this.myChart}> </div>
+      </div>
+    );
   }
 }

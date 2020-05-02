@@ -13,7 +13,7 @@ function App() {
       <BrowserRouter>
         <div>
           <Switch>
-            <Route path="/" component={ScatterPlot} exact={true} />
+            <Route path="/" component={LineChart  } exact={true} />
             <Route path="/bar-chart" component={BarChart} exact={true} />
             <Route path="/line-chart" component={LineChart} exact={true} />
             <Route path="/scatter-plot" component={ScatterPlot} exact={true} />
